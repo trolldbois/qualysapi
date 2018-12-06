@@ -1,0 +1,813 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    elementFormDefault="qualified">
+
+    <!-- REQUEST -->
+    <xs:element name="ServiceRequest">
+        <xs:complexType>
+            <xs:all>
+                <xs:element name="filters" type="ServiceRequestFilters" minOccurs="0"/>
+                <xs:element name="preferences" type="ServiceRequestPreferences" minOccurs="0"/>
+                <xs:element name="data" type="ServiceRequestData" minOccurs="0"/>
+            </xs:all>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="ServiceRequestFilters">
+      <xs:sequence>
+        <xs:element name="Criteria" type="Criteria" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Criteria">
+      <xs:simpleContent>
+       <xs:extension base="xs:string">
+          <xs:attribute name="field" type="xs:string"/>
+          <xs:attribute name="name" type="xs:string"/>
+          <xs:attribute name="operator">
+              <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="CONTAINS"/>
+                        <xs:enumeration value="IN"/>
+                        <xs:enumeration value="EQUALS"/>
+                        <xs:enumeration value="NOT EQUALS"/>
+                        <xs:enumeration value="GREATER"/>
+                        <xs:enumeration value="LESSER"/>
+                        <xs:enumeration value="NONE"/>
+                    </xs:restriction>
+                </xs:simpleType>
+                </xs:attribute>
+       </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="ServiceRequestPreferences">
+      <xs:all>
+        <xs:element name="startFromId" type="xs:long" minOccurs="0"/>
+        <xs:element name="startFromOffset" type="xs:int" minOccurs="0"/>
+        <xs:element name="limitResults" type="xs:int" minOccurs="0"/>
+      </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="ServiceRequestData">
+      <xs:sequence>
+        <xs:element name="WebApp" type="WebApp" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+
+
+
+    <!-- RESPONSE -->
+    <xs:element name="ServiceResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="responseCode" type="ResponseCode"/>
+                <xs:element name="responseErrorDetails" type="ResponseErrorObject" minOccurs="0"/>
+                <xs:element name="count" type="xs:int" minOccurs="0"/>
+                <xs:element name="hasMoreRecords" type="xs:boolean" minOccurs="0"/>
+                <xs:element name="lastId" type="xs:long" minOccurs="0"/>
+                <xs:element name="data" type="ServiceResponseData" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:simpleType name="ResponseCode">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="AUTH_CREDENTIALS_NEEDED"/>
+            <xs:enumeration value="CANNOT_BE_NULL"/>
+            <xs:enumeration value="INVALID_XML"/>
+            <xs:enumeration value="INVALID_CREDENTIALS"/>
+            <xs:enumeration value="INVALID_API_VERSION"/>
+            <xs:enumeration value="INVALID_PARAM"/>
+            <xs:enumeration value="INVALID_URL"/>
+            <xs:enumeration value="INVALID_REQUEST"/>
+            <xs:enumeration value="NOT_FOUND"/>
+            <xs:enumeration value="OTHER_ERROR"/>
+            <xs:enumeration value="OPERATION_NOT_SUPPORTED"/>
+            <xs:enumeration value="EVALUATION_EXPIRED"/>
+            <xs:enumeration value="JMS_SERVER_DOWN"/>
+            <xs:enumeration value="RMI_SERVER_DOWN"/>
+            <xs:enumeration value="SUCCESS"/>
+            <xs:enumeration value="STILL_PROCESSING"/>
+            <xs:enumeration value="UNAUTHORIZED"/>
+            <xs:enumeration value="UNAUTHORIZED_DESTINATION_APPS"/>
+            <xs:enumeration value="UNIDENTIFIED_PRODUCER"/>
+            <xs:enumeration value="UNKNOWN_OBJECT"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="ResponseErrorObject">
+        <xs:sequence>
+            <xs:element name="errorMessage" type="xs:string"/>
+            <xs:element name="errorResolution" type="xs:string" minOccurs="0"/>
+            <xs:element name="internalErrorCodeId" type="xs:int" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="ServiceResponseData">
+        <xs:sequence>
+            <xs:element name="WebApp" type="WebApp" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <!-- DATA -->
+   <xs:complexType name="WebApp">
+       <xs:all>
+           <xs:element name="id" type="xs:long" minOccurs="0"/>
+           <xs:element name="name" type="Cdata" minOccurs="0"/>
+           <xs:element name="url" type="Url" minOccurs="0"/>
+           <xs:element name="os" type="xs:string" minOccurs="0"/>
+           <xs:element name="owner" type="User" minOccurs="0"/>
+           <xs:element name="scope" default="ALL" minOccurs="0">
+               <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="ALL"/>
+                        <xs:enumeration value="LIMIT"/>
+                        <xs:enumeration value="SUBDOMAIN"/>
+                        <xs:enumeration value="DOMAINS"/>
+                    </xs:restriction>
+               </xs:simpleType>
+           </xs:element>
+           <xs:element name="subDomain" type="Domain" minOccurs="0"/>
+           <xs:element name="domains" type="DomainList" minOccurs="0"/>
+           <xs:element name="uris" type="UrlList" minOccurs="0"/>
+           <xs:element name="attributes" type="AttributeList" minOccurs="0"/>
+           <xs:element name="defaultProfile" type="WasScanOptionProfile" minOccurs="0"/>
+           <xs:element name="defaultScanner" type="ScannerAppliance" minOccurs="0"/>
+           <xs:element name="defaultScannerTags" type="TagList" minOccurs="0"/>
+           <xs:element name="scannerLocked" type="xs:boolean" default="false" minOccurs="0"/>
+           <xs:element name="progressiveScanning" type="xs:boolean" minOccurs="0"/>
+           <xs:element name="redundancyLinks" type="xs:string" minOccurs="0"/>
+           <xs:element name="maxRedundancyLinks" type="xs:string" minOccurs="0"/>
+           <xs:element name="urlBlacklist" type="UrlEntryList" minOccurs="0"/> 
+           <xs:element name="urlWhitelist" type="UrlEntryList" minOccurs="0"/> 
+           <xs:element name="postDataBlacklist" type="UrlEntryList" minOccurs="0"/> 
+           <xs:element name="logoutRegexList" type="UrlEntryList" minOccurs="0"/> 
+           <xs:element name="authRecords" type="WebAppAuthRecordList" minOccurs="0"/> 
+           <xs:element name="dnsOverrides" type="DnsOverrideList" minOccurs="0"/>
+           <xs:element name="useRobots" default="IGNORE" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="IGNORE"/>
+                        <xs:enumeration value="ADD_PATHS"/>
+                        <xs:enumeration value="BLACKLIST"/>
+                        </xs:restriction>
+                </xs:simpleType>
+           </xs:element>
+           <xs:element name="useSitemap" type="xs:boolean" default="false" minOccurs="0"/>
+           <xs:element name="headers" type="WebAppHeaderList" minOccurs="0"/>
+           <xs:element name="malwareMonitoring" type="xs:boolean" minOccurs="0"/>
+           <xs:element name="malwareNotification" type="xs:boolean" minOccurs="0"/>
+           <xs:element name="malwareTaskId" type="xs:long" minOccurs="0"/>
+           <xs:element name="malwareScheduling" type="SchedulePlanification" minOccurs="0"/>
+           <xs:element name="tags" type="TagList" minOccurs="0"/>
+           <xs:element name="comments" type="CommentList" minOccurs="0"/>
+           <xs:element name="isScheduled" type="xs:boolean" minOccurs="0"/>
+           <xs:element name="lastScan" type="WasScan" minOccurs="0"/>
+           <xs:element name="createdBy" type="User" minOccurs="0"/>
+           <xs:element name="createdDate" type="xs:dateTime" minOccurs="0"/>
+           <xs:element name="updatedBy" type="User" minOccurs="0"/>
+           <xs:element name="updatedDate" type="xs:dateTime" minOccurs="0"/>
+           <xs:element name="screenshot" type="Cdata" minOccurs="0"/>
+           <xs:element name="proxy" type="HttpProxy" minOccurs="0"/>
+           <xs:element name="config" type="WebAppConfig" minOccurs="0"/>
+           <xs:element name="crawlingScripts" type="CrawlingScriptList" minOccurs="0"/>
+       </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="Cdata">
+       <xs:simpleContent>
+           <xs:extension base="xs:string"/>
+       </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="UrlList">
+        <xs:all>
+            <xs:element name="count" type="xs:int" minOccurs="0"/>
+            <xs:element name="list" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Url" type="Url" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="set" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Url" type="Url" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="add" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Url" type="Url" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="remove" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Url" type="Url" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="update" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Url" type="Url" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="Url">
+        <xs:simpleContent>
+            <xs:extension base="Cdata"/>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="User">
+        <xs:all>
+            <xs:element name="id" type="xs:long" minOccurs="0"/>
+            <xs:element name="username" type="xs:string" minOccurs="0"/>
+            <xs:element name="firstName" type="Cdata" minOccurs="0"/>
+            <xs:element name="lastName" type="Cdata" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="HttpProxy">
+        <xs:all>
+           <xs:element name="id" type="xs:long" minOccurs="0"/>
+           <xs:element name="name" type="Cdata" minOccurs="0"/>
+           <xs:element name="url" type="Url" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="WebAppConfig">
+        <xs:sequence>
+            <xs:choice>
+                <xs:element name="cancelScansAfterNHours" type="xs:int" minOccurs="0"/>
+                <xs:element name="cancelScansAt" type="xs:string" minOccurs="0"/>
+                <xs:element name="defaultAuthRecord" type="WebAppAuthRecord" minOccurs="0"/>
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="DomainList">
+        <xs:all>
+            <xs:element name="count" type="xs:int" minOccurs="0"/>
+            <xs:element name="list" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Domain" type="Domain" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="set" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Domain" type="Domain" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="add" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Domain" type="Domain" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="remove" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Domain" type="Domain" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="update" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Domain" type="Domain" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="Domain">
+        <xs:simpleContent>
+            <xs:extension base="Cdata"/>
+        </xs:simpleContent>
+   </xs:complexType>
+
+    <xs:complexType name="AttributeList">
+        <xs:all>
+            <xs:element name="count" type="xs:int" minOccurs="0"/>
+            <xs:element name="list" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Attribute" type="Attribute" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="set" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Attribute" type="Attribute" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="add" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Attribute" type="Attribute" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="remove" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Attribute" type="Attribute" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="update" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Attribute" type="Attribute" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="Attribute">
+        <xs:all>
+            <xs:element name="name" type="Cdata" minOccurs="0"/>
+            <xs:element name="value" type="Cdata" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="WasScanOptionProfile">
+        <xs:all>
+            <xs:element name="id" type="xs:long" minOccurs="0"/>
+            <xs:element name="name" type="Cdata" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="ScannerAppliance">
+        <xs:all>
+            <xs:element name="type">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="EXTERNAL"/>
+                        <xs:enumeration value="INTERNAL"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="friendlyName" type="Cdata" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="UrlEntryList">
+        <xs:all>
+            <xs:element name="count" type="xs:int" minOccurs="0"/>
+            <xs:element name="list" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="UrlEntry" type="UrlEntry" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="set" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="UrlEntry" type="UrlEntry" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="add" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="UrlEntry" type="UrlEntry" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="remove" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="UrlEntry" type="UrlEntry" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="update" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="UrlEntry" type="UrlEntry" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="UrlEntry">
+       <xs:simpleContent>
+           <xs:extension base="Cdata">
+               <xs:attribute name="regex" type="xs:boolean" use="optional" default="false"/>
+           </xs:extension>
+       </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="WebAppAuthRecordList">
+        <xs:all>
+            <xs:element name="count" type="xs:int" minOccurs="0"/>
+            <xs:element name="list" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="WebAppAuthRecord" type="WebAppAuthRecord" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="set" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="WebAppAuthRecord" type="WebAppAuthRecord" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="add" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="WebAppAuthRecord" type="WebAppAuthRecord" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="remove" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="WebAppAuthRecord" type="WebAppAuthRecord" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="WebAppAuthRecord">
+        <xs:all>
+            <xs:element name="id" type="xs:long" minOccurs="0"/>
+            <xs:element name="name" type="Cdata" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="DnsOverrideList">
+        <xs:all>
+            <xs:element name="count" type="xs:int" minOccurs="0"/>
+            <xs:element name="list" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="DnsOverride" type="DnsOverride" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="set" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="DnsOverride" type="DnsOverride" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="add" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="DnsOverride" type="DnsOverride" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="remove" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="DnsOverride" type="DnsOverride" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="DnsOverride">
+        <xs:all>
+           <xs:element name="id" type="xs:long" minOccurs="0"/>
+           <xs:element name="name" type="Cdata" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="WebAppHeaderList">
+        <xs:all>
+            <xs:element name="count" type="xs:int" minOccurs="0"/>
+            <xs:element name="list" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="WebAppHeader" type="WebAppHeader" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="set" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="WebAppHeader" type="WebAppHeader" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="add" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="WebAppHeader" type="WebAppHeader" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="remove" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="WebAppHeader" type="WebAppHeader" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="update" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="WebAppHeader" type="WebAppHeader" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="WebAppHeader">
+        <xs:simpleContent>
+            <xs:extension base="Cdata"/>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="TagList">
+        <xs:all>
+            <xs:element name="count" type="xs:int" minOccurs="0"/>
+            <xs:element name="list" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Tag" type="Tag" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="set" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Tag" type="Tag" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="add" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Tag" type="Tag" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="remove" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Tag" type="Tag" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="update" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Tag" type="Tag" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="Tag">
+        <xs:all>
+            <xs:element name="id" type="xs:long"/>
+            <xs:element name="name" type="Cdata" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="CommentList">
+        <xs:all>
+            <xs:element name="count" type="xs:int" minOccurs="0"/>
+            <xs:element name="list" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Comment" type="Comment" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="set" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Comment" type="Comment" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="add" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="Comment" type="Comment" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="Comment">
+        <xs:all>
+            <xs:element name="contents" type="Cdata"/>
+            <xs:element name="author" type="User" minOccurs="0"/>
+            <xs:element name="createdDate" type="xs:dateTime" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="WasScan">
+        <xs:all>
+            <xs:element name="id" type="xs:long"/>
+            <xs:element name="name" type="Cdata" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="TimeZone">
+        <xs:all>
+            <xs:element name="code" type="xs:string" minOccurs="0"/>
+            <xs:element name="offset" type="xs:string" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="SchedulePlanification">
+        <xs:all>
+            <xs:element name="startDate" type="xs:dateTime" minOccurs="0"/>
+            <xs:element name="timeZone" type="TimeZone" minOccurs="0"/>
+            <xs:element name="occurrenceType" minOccurs="0">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="ONCE" />
+                        <xs:enumeration value="HOURLY" />
+                        <xs:enumeration value="DAILY" />
+                        <xs:enumeration value="WEEKLY" />
+                        <xs:enumeration value="MONTHLY" />
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="occurrence" minOccurs="0">
+                <xs:complexType>
+                    <xs:choice>
+                        <xs:element name="hourlyOccurrence" type="HourlyOccurrence"/>
+                        <xs:element name="dailyOccurrence" type="DailyOccurrence"/>
+                        <xs:element name="weeklyOccurrence" type="WeeklyOccurrence"/>
+                        <xs:element name="monthlyOccurrence" type="MonthlyOccurrence"/>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="cancelAfterNHours" type="xs:int" minOccurs="0"/>
+            <xs:element name="cancelTime" type="xs:string" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="HourlyOccurrence">
+        <xs:all>
+            <xs:element name="everyNHours" type="xs:long" minOccurs="0"/>
+            <xs:element name="occurrenceCount" type="xs:long" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="DailyOccurrence">
+        <xs:all>
+            <xs:element name="everyNDays" type="xs:long" minOccurs="0"/>
+            <xs:element name="occurrenceCount" type="xs:long" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="WeeklyOccurrence">
+        <xs:all>
+            <xs:element name="everyNWeeks" type="xs:long" minOccurs="0"/>
+            <xs:element name="onDays" minOccurs="0">
+                <xs:complexType>
+                    <xs:sequence>
+                           <xs:element name="WeekDay" type="WeekDay" maxOccurs="7" />
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="occurrenceCount" type="xs:long" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:simpleType name="WeekDay">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="MONDAY"/>
+            <xs:enumeration value="TUESDAY"/>
+            <xs:enumeration value="WEDNESDAY"/>
+            <xs:enumeration value="THURSDAY"/>
+            <xs:enumeration value="FRIDAY"/>
+            <xs:enumeration value="SATURDAY"/>
+            <xs:enumeration value="SUNDAY"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="MonthlyOccurrence">
+        <xs:all>
+            <xs:element name="monthlyType" minOccurs="0">
+                <xs:complexType>
+                    <xs:choice>
+                        <xs:element name="occurDayNbInMonth">
+                            <xs:complexType>
+                                <xs:all>
+                                    <xs:element name="dayNb" type="xs:long" minOccurs="0"/>
+                                    <xs:element name="everyNMonths" type="xs:long" minOccurs="0"/>
+                                </xs:all>
+                            </xs:complexType>
+                        </xs:element>
+                        <xs:element name="occurDayOrderInMonth">
+                            <xs:complexType>
+                                <xs:all>
+                                    <xs:element name="dayOrder" minOccurs="0">
+                                        <xs:simpleType>
+                                            <xs:restriction base="xs:string">
+                                                <xs:enumeration value="FIRST"/>
+                                                <xs:enumeration value="SECOND"/>
+                                                <xs:enumeration value="THIRD"/>
+                                                <xs:enumeration value="FOURTH"/>
+                                                <xs:enumeration value="LAST"/>
+                                            </xs:restriction>
+                                        </xs:simpleType>
+                                    </xs:element>
+                                    <xs:element name="dayOfMonth" type="WeekDay" minOccurs="0"/>
+                                    <xs:element name="everyNMonths" type="xs:long" minOccurs="0"/>
+                                </xs:all>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="occurrenceCount" type="xs:long" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="CrawlingScriptList">
+        <xs:all>
+            <xs:element name="count" type="xs:int" minOccurs="0"/>
+            <xs:element name="list" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="SeleniumScript" type="SeleniumScript" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="set" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="SeleniumScript" type="SeleniumScript" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="add" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="SeleniumScript" type="SeleniumScript" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="remove" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="SeleniumScript" type="SeleniumScript" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="update" minOccurs="0" >
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="SeleniumScript" type="SeleniumScript" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="SeleniumScript">
+        <xs:all>
+           <xs:element name="id" type="xs:long" minOccurs="0"/>
+           <xs:element name="name" type="Cdata" minOccurs="0"/>
+           <xs:element name="data" type="Cdata" minOccurs="0"/>
+           <xs:element name="regex" type="Cdata" minOccurs="0"/>
+           <xs:element name="requiresAuthentication" type="xs:boolean" minOccurs="0"/>
+           <xs:element name="startingUrl" type="Cdata" minOccurs="0"/>
+           <xs:element name="startingUrlRegex" type="xs:boolean" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+
+</xs:schema>
