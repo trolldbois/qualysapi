@@ -1,5 +1,8 @@
 from io import StringIO
 
+from lxml import objectify, etree
+
+from qualysapi import api_objects
 from qualysapi.gen import webapp
 
 class UnexpectedResponseCodeException(Exception):
@@ -17,6 +20,9 @@ class QualysModule(object):
     """
     def __init__(self, connector):
         self.connector = connector
+        self.__parser = objectify.makeparser(remove_blank_text=True)
+        lookup = api_objects.make_custom_class_lookup()
+        self.__parser.set_element_class_lookup(lookup)
 
     @property
     def _parsing_module(self):
@@ -27,13 +33,17 @@ class QualysModule(object):
         raise NotImplementedError
 
     def _make_request_filter_data(self, criterias: list):
-        out = StringIO()
-        serviceRequest = self._parsing_module.ServiceRequestSub()
-        serviceRequest.filters = self._parsing_module.ServiceRequestFiltersSub()
+        # use objectify
+        request_data = objectify.Element("ServiceRequest")
+        request_data.filters = objectify.Element("ServiceRequestFilters")
         for c in criterias:
-            serviceRequest.filters.add_Criteria(c)
-        serviceRequest.export(out, 0)
-        return out.getvalue()
+            request_data.filters.append(c)
+        objectify.deannotate(request_data)
+        etree.cleanup_namespaces(request_data)
+        obj_xml = etree.tostring(request_data,
+                                 pretty_print=True,
+                                 xml_declaration=True)
+        return obj_xml
 
     def _make_pagination_offset_queries(self, response, endpoint, http_method):
         filters = kwargs.get('filters')
@@ -65,7 +75,7 @@ class QualysModule(object):
 
     def _handle_response_code(self, response):
         # check return status
-        if response.responseCode != webapp.ResponseCode.SUCCESS:
+        if response.responseCode.text != 'SUCCESS':
             raise UnexpectedResponseCodeException(response.responseCode, response.responseErrorDetails.errorMessage)
         return response
 
@@ -85,7 +95,8 @@ class QualysModule(object):
         data = kwargs.get('data')
         full_endpoint = endpoint.format(**kwargs)
         response = self.connector.request(full_endpoint, http_method=http_method, data=data)
-        response = self._parsing_module.parseString(response, silence=True)
+        # response = self._parsing_module.parseString(response, silence=True)
+        response = objectify.fromstring(response, self.__parser)
         response = self._handle_response_code(response)
         response = self._handle_pagination(response, full_endpoint, http_method)
         return response
@@ -184,3 +195,32 @@ class RequestFilter(object):
                     filter.apply(operator_obj.field, filter_args[arg])
             return filter.filters
 
+
+
+def pull_xsd(server='qualysapi.qualys.com'):
+    import requests
+    import os
+    todos = [('webapp.xsd', f'https://{server}/qps/xsd/3.0/was/webapp.xsd'),
+             ('webappauthrecord.xsd', f'https://{server}/qps/xsd/3.0/was/webappauthrecord.xsd'),
+             ('scan.xsd', f'https://{server}/qps/xsd/3.0/was/scan.xsd'),
+             ('schedule.xsd', f'https://{server}/qps/xsd/3.0/was/schedule.xsd'),
+             ('report.xsd', f'https://{server}/qps/xsd/3.0/was/report.xsd'),
+             ('optionprofile.xsd', f'https://{server}/qps/xsd/3.0/was/optionprofile.xsd'),
+             ('finding.xsd', f'https://{server}/qps/xsd/3.0/was/finding.xsd'),
+             ]
+    def dl_and_save(filename, url):
+        response = requests.get(url, stream=True)
+        # Throw an error for bad status codes
+        response.raise_for_status()
+        with open(filename, 'wb') as handle:
+            for block in response.iter_content(1024):
+                handle.write(block)
+        return filename
+    for fname, url in todos:
+        dl_and_save(os.path.sep.join(['qualysapi', 'gen', fname]), url)
+        print(f"Downloaded {fname}")
+    return
+
+
+if __name__ == '__main__':
+    pull_xsd()

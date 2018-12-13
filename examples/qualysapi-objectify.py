@@ -35,27 +35,24 @@ if __name__ == '__main__':
 
     # print(api.was.get_webapp_count())
 
-    if True:
-        # webapp_list = api.was.webapp.search_webapp()
-        # for webapp in webapp_list:
-        #     print(webapp)
-        #     # only available after a get_webapp_details query
-        #     # if webapp.crawlingScripts:
-        #     #     app = api.was.webapp.get_webapp_details(webapp.id)
-        #     #     print(f"SCRIPT FOUND IN {app.name}")
-        #
-        # result = api.was.webapp.get_webapp_details(webapp_list[-1].id)
-        # print(result)
-        #
-        # result = api.was.webapp.create_webapp("Test Web App", "https://nothere.example.com")
-        # print(result)
-        #
-        # # result = api.was.webapp.update_webapp("Test Web App", "https://nothere.example.com")
-        # # print(result)
-        #
-        # # OK works
-        # response = api.was.webapp.delete_webapp(id=result.id)
-        # print(response)
+    if False:
+        webapp_list = api.was.webapp.search_webapp()
+        for webapp in webapp_list:
+            print(webapp)
+            if webapp.crawlingScripts:
+                app = api.was.webapp.get_webapp_details(webapp.id)
+                print(f"SCRIPT FOUND IN {app.name}")
+
+        print(api.was.webapp.get_webapp_details(webapp_list[-1].id))
+
+        result = api.was.webapp.create_webapp("Test Web App", "https://nothere.example.com")
+        print(result)
+
+        result = api.was.webapp.update_webapp("Test Web App", "https://nothere.example.com")
+        print(result)
+
+        response = api.was.webapp.delete_webapp(id=result.id)
+        print(response)
 
         response = api.was.webapp.get_selenium_script(24348536, 5200)
         print(response)
@@ -67,7 +64,7 @@ if __name__ == '__main__':
         # print(webapp_list[0].id)
         # response = api.was.webapp.get_selenium_script(webapp_list[0].id)
 
-    if True:
+    if False:
         # import qualysapi
         # import qualysapi.core as qcore
         # qcore.pull_xsd()
@@ -77,7 +74,6 @@ if __name__ == '__main__':
         auth_records = api.was.authrecord.search_auth_record()
         for record in auth_records:
             print(record)
-            print(record.id)
 
         # record = api.was.authrecord.get_auth_record_details(auth_records[-1].id)
         # print(record)
@@ -98,6 +94,118 @@ if __name__ == '__main__':
     from lxml import objectify, etree
     from qualysapi import api_objects
 
+    if False:
+        # normal objectify
+        objtree = objectify.fromstring(response)
+        print(objtree)
+        print(objtree.count)
+        print(objtree.data.WebAppAuthRecord[0].id)
+        print(list(objtree.data.WebAppAuthRecord))
+
+
+    class MyLookup(etree.CustomElementClassLookup):
+        def lookup(self, node_type, document, namespace, name):
+            print(f"MyLookup {name} {node_type}")
+            if name == 'WebAppAuthRecord':
+                return api_objects.WebAppAuthRecord  # be a bit more selective here ...
+            #return etree.ElementBase
+
+    if False:
+        # Custom class chooser works as xmlparser
+        parser = etree.XMLParser()
+        parser.set_element_class_lookup(MyLookup())
+        objtree = etree.fromstring(response, parser)
+        print(objtree)
+        print(objtree[2])
+        print(objtree[3].getchildren())
+        print(objtree[3][0].try_me())
+        print(objtree[3][0].getchildren()[0].text)  # data.webauthrecord.id
+
+    if False:
+        # use a default namespace solution
+        parser = etree.XMLParser()
+        lookup = etree.ElementNamespaceClassLookup()
+        parser.set_element_class_lookup(lookup)
+        ns_lookup = lookup.get_namespace(None)
+        ns_lookup['WebAppAuthRecord'] = api_objects.WebAppAuthRecord
+        objtree = etree.fromstring(response, parser)
+        print(objtree)
+        print(objtree[2])
+        print(objtree[3].getchildren())
+        print(objtree[3][0].try_me())
+        print(objtree[3][0].getchildren()[0].text)  # data.webauthrecord.id
+
+    class MyLookupObjectify(objectify.ObjectifyElementClassLookup):
+        def lookup(self, node_type, document, namespace, name):
+            print(f"MyLookupObjectify {name}")
+            if name == 'WebAppAuthRecord':
+                return api_objects.WebAppAuthRecord  # be a bit more selective here ...
+
+    if False:
+        # non standard objectify - not custom class
+        parser = objectify.makeparser(remove_blank_text=True)
+        objtree = objectify.fromstring(response, parser)
+        print(objtree)
+        print(objtree.count)
+        print(objtree.data.WebAppAuthRecord[0].id)
+        print(list(objtree.data.WebAppAuthRecord))
+
+    if False:
+        # custom class objectify - not working
+        parser = objectify.makeparser(remove_blank_text=True)
+        lookup = MyLookup() # that doesnt work break objectify
+        # lookup = objectify.ObjectifyElementClassLookup() # objectify still works
+        # lookup = MyLookupObjectify()  # objectify works, but not custom class
+        parser.set_element_class_lookup(lookup)
+        objtree = objectify.fromstring(response, parser)
+        print(objtree)
+        print(objtree.count)
+        print(objtree.data.WebAppAuthRecord[0].id)
+        print(list(objtree.data.WebAppAuthRecord))
+
+    if True:
+        # custom class objectify simple version with namespace
+        parser = objectify.makeparser(remove_blank_text=True)
+        lookup = etree.ElementNamespaceClassLookup(objectify.ObjectifyElementClassLookup())
+        ns_lookup = lookup.get_namespace(None)
+        ns_lookup['WebAppAuthRecord'] = api_objects.WebAppAuthRecord
+        parser.set_element_class_lookup(lookup)
+        objtree = objectify.fromstring(response, parser)
+        print(objtree)
+        print(objtree.count)
+        print(objtree.data.WebAppAuthRecord[0].id)
+        print(list(objtree.data.WebAppAuthRecord))
+
+    #parser = objectify.makeparser(remove_blank_text=True)
+    #parser.set_element_class_lookup(MyLookupObjectify())
+    # lookup = etree.ElementNamespaceClassLookup( MyLookupObjectify() )
+    # parser.set_element_class_lookup(lookup)
+    #objtree = objectify.fromstring(response)
+
+    print("")
+    exit(0)
+
+    class MyLookup2(etree.PythonElementClassLookup):
+        def lookup(self, document, element):
+            print(f"lookup2: {element}")
+            if element.tag == 'WebAppAuthRecord':
+                return api_objects.WebAppAuthRecord
+
+    # parsing_type = objectify.PyType('WebAppAuthRecord', api_objects.WebAppAuthRecord.check_type,
+    #                                 api_objects.WebAppAuthRecord)
+    # parsing_type.register()
+    #parser = objectify.makeparser(remove_blank_text=True)
+
+    # fallback = etree.ElementDefaultClassLookup()
+    # lookup3 = etree.ElementNamespaceClassLookup(MyLookup() )
+    # lookup2 = MyLookup2()
+    # lookup = MyLookup()
+    # parser.set_element_class_lookup(lookup)
+    # objectify.set_default_parser(parser)
+    objtree = etree.fromstring(response, parser)
+    print(objtree)
+    print(f"auth record 1 {objtree.data.WebAppAuthRecord}")
+    print(list(objtree.data.WebAppAuthRecord))
 
     # list web applications
     # ret = qgs.request('/qps/rest/2.0/fo/report')

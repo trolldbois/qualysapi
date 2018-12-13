@@ -141,6 +141,11 @@ api_methods['am2 get'] = set([
     'get/am/awsassetdataconnector/',
     'get/am/awsauthrecord/',
 ])
+
+api_methods['portal'] = set([
+    'version',
+])
+
 # Keep track of methods with ending slashes to autocorrect user when they forgot slash.
 api_methods_with_trailing_slash = defaultdict(set)
 for method_group in set(['1', '2', 'was', 'am', 'am2']):

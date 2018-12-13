@@ -1,6 +1,51 @@
 from __future__ import absolute_import
 import datetime
-from lxml import objectify
+from lxml import objectify, etree
+
+
+def make_custom_class_lookup():
+    lookup = etree.ElementNamespaceClassLookup(objectify.ObjectifyElementClassLookup())
+    ns_lookup = lookup.get_namespace(None)
+    # add any custom class here
+    ns_lookup['WebApp'] = WebApp
+    ns_lookup['WebAppAuthRecord'] = WebAppAuthRecord
+    ns_lookup['ServiceResponse'] = ServiceResponse
+    return lookup
+
+
+class WebAppAuthRecord(objectify.ObjectifiedElement):
+    @property
+    def id(self):
+        return int(self.find('id'))
+
+    def __str__(self):
+        key_fields = ['id', 'name', 'url', 'owner', 'tags']
+        return '%s(%s)' % (
+            type(self).__name__,
+            ', '.join('%s=%s' % (item.tag,item.text) for item in self.getchildren() if item.tag in key_fields and item.text))
+
+    __repr__ =  __str__
+
+
+class WebApp(objectify.ObjectifiedElement):
+    @property
+    def id(self):
+        return int(self.find('id'))
+
+    def __str__(self):
+        key_fields = ['id', 'name', 'url', 'owner', 'tags']
+        return '%s(%s)' % (
+            type(self).__name__,
+            ', '.join('%s=%s' % (item.tag,item.text) for item in self.getchildren() if item.tag in key_fields and item.text))
+
+    __repr__ =  __str__
+
+
+class ServiceResponse(objectify.ObjectifiedElement):
+    @property
+    def hasMoreRecords(self):
+        return bool(self.find('hasMoreRecords'))  # catch missing field
+
 
 
 class Host(object):
