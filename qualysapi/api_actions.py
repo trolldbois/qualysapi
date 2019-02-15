@@ -3,6 +3,7 @@ from lxml import objectify
 import qualysapi.api_objects
 from qualysapi.api_objects import *
 
+import logging
 
 class QGActions(object):
     def getHost(self, host):
@@ -36,6 +37,31 @@ class QGActions(object):
                              )
 
         return hostArray
+
+    def list_virtual_hosts(self, ip=None, port=None):
+        call = '/api/2.0/fo/asset/vhost/'
+        parameters = {'action': 'list', 'ip': ip, 'port': port}
+        hostsData = objectify.fromstring(self.request(call, parameters)).RESPONSE
+        hosts = [VirtualHost(hostData.find('FQDN'),
+                    hostData.find('IP'),
+                    hostData.find('NETWORK_ID'),
+                    hostData.find('PORT'),
+                    ) for hostData in list(hostsData.VIRTUAL_HOST_LIST.VIRTUAL_HOST)]
+        return hosts
+
+    def create_virtual_host(self, fqdn, ip, port):
+        call = '/api/2.0/fo/asset/vhost/'
+        parameters = {'action': 'create', 'fqdn': fqdn, 'ip': ip, 'port': port}
+        res = objectify.fromstring(self.request(call, parameters)).RESPONSE
+        code = getattr(res, 'CODE', '')
+        logging.info("%s %s %s", res.DATETIME, code, res.TEXT)
+
+    def delete_virtual_host(self, fqdn, ip, port):
+        call = '/api/2.0/fo/asset/vhost/'
+        parameters = {'action': 'delete', 'ip': ip, 'port': port}
+        res = objectify.fromstring(self.request(call, parameters)).RESPONSE
+        code = getattr(res, 'CODE', '')
+        logging.info("%s %s %s", res.DATETIME, code, res.TEXT)
 
     def listAssetGroups(self, groupName=''):
         call = 'asset_group_list.php'

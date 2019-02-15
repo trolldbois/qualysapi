@@ -35,14 +35,15 @@ if __name__ == '__main__':
 
     # print(api.was.get_webapp_count())
 
-    if True:
-        # webapp_list = api.was.webapp.search_webapp()
-        # for webapp in webapp_list:
-        #     print(webapp)
-        #     # only available after a get_webapp_details query
-        #     # if webapp.crawlingScripts:
-        #     #     app = api.was.webapp.get_webapp_details(webapp.id)
-        #     #     print(f"SCRIPT FOUND IN {app.name}")
+    if False:
+        webapp_list = api.was.webapp.search_webapp()
+        for webapp in webapp_list:
+            print(webapp)
+            # only available after a get_webapp_details query
+            app = api.was.webapp.get_webapp_details(webapp.id)
+            print(app)
+            if app.crawlingScripts:
+                print(f"SCRIPT FOUND IN {app.name}: {app.crawlingScripts}")
         #
         # result = api.was.webapp.get_webapp_details(webapp_list[-1].id)
         # print(result)
