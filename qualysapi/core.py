@@ -45,7 +45,7 @@ class QualysModule(object):
                                  xml_declaration=True)
         return obj_xml
 
-    def _make_pagination_offset_queries(self, response, endpoint, http_method):
+    def _make_pagination_offset_queries(self, response, endpoint, http_method, *args, **kwargs):
         filters = kwargs.get('filters')
         data = kwargs.get('data')
         total_limit = kwargs.get('preferences') or 100
@@ -56,7 +56,8 @@ class QualysModule(object):
         while has_more and running_count < total_limit:
             preferences = self._parsing_module.ServiceRequestPreferences(startFromOffset=running_count, limitResults=total_limit-running_count)
             request = self._parsing_module.ServiceRequest(filters=filters, preferences=preferences, data=data)
-            response2 = self._parsing_module.parseString(self.connector.request(endpoint, http_method=http_method, data=request), silence=True)
+            response = self.connector.request(endpoint, http_method=http_method, data=request)
+            response2 = self._parsing_module.parseString(response.decode('utf-8'), silence=True)
             response2 = self._handle_response_code(response2)
             yield response2.data
             has_more = response2.hasMoreRecords
@@ -75,7 +76,7 @@ class QualysModule(object):
 
     def _handle_response_code(self, response):
         # check return status
-        if response.responseCode.text != 'SUCCESS':
+        if response.responseCode != 'SUCCESS':
             raise UnexpectedResponseCodeException(response.responseCode, response.responseErrorDetails.errorMessage)
         return response
 
@@ -95,8 +96,8 @@ class QualysModule(object):
         data = kwargs.get('data')
         full_endpoint = endpoint.format(**kwargs)
         response = self.connector.request(full_endpoint, http_method=http_method, data=data)
-        # response = self._parsing_module.parseString(response, silence=True)
-        response = objectify.fromstring(response.encode('utf-8'), self.__parser)
+        response = self._parsing_module.parseString(response.encode('utf-8'), silence=True)
+        #response = objectify.fromstring(response.encode('utf-8'), self.__parser)
         response = self._handle_response_code(response)
         response = self._handle_pagination(response, full_endpoint, http_method)
         return response
@@ -196,31 +197,3 @@ class RequestFilter(object):
             return filter.filters
 
 
-
-def pull_xsd(server='qualysapi.qualys.com'):
-    import requests
-    import os
-    todos = [('webapp.xsd', f'https://{server}/qps/xsd/3.0/was/webapp.xsd'),
-             ('webappauthrecord.xsd', f'https://{server}/qps/xsd/3.0/was/webappauthrecord.xsd'),
-             ('scan.xsd', f'https://{server}/qps/xsd/3.0/was/scan.xsd'),
-             ('schedule.xsd', f'https://{server}/qps/xsd/3.0/was/schedule.xsd'),
-             ('report.xsd', f'https://{server}/qps/xsd/3.0/was/report.xsd'),
-             ('optionprofile.xsd', f'https://{server}/qps/xsd/3.0/was/optionprofile.xsd'),
-             ('finding.xsd', f'https://{server}/qps/xsd/3.0/was/finding.xsd'),
-             ]
-    def dl_and_save(filename, url):
-        response = requests.get(url, stream=True)
-        # Throw an error for bad status codes
-        response.raise_for_status()
-        with open(filename, 'wb') as handle:
-            for block in response.iter_content(1024):
-                handle.write(block)
-        return filename
-    for fname, url in todos:
-        dl_and_save(os.path.sep.join(['qualysapi', 'gen', fname]), url)
-        print(f"Downloaded {fname}")
-    return
-
-
-if __name__ == '__main__':
-    pull_xsd()

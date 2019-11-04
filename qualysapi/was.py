@@ -4,6 +4,7 @@ from io import StringIO
 from lxml import objectify, etree
 
 from qualysapi.core import QualysModule
+from qualysapi.gen import webappsubs, webappauthrecordsubs
 
 
 class WASModuleWebAppAPI(object):
@@ -30,6 +31,9 @@ class WASModuleAuthRecordAPI(object):
 
 
 class WASModuleWebApp(QualysModule):
+    def _get_parsing_module(self):
+        return webappsubs
+        #return gen.webapp
 
     def _make_webapp_data(self, name, url):
         # use objectify
@@ -89,7 +93,7 @@ class WASModuleWebApp(QualysModule):
 
 class WASModuleAuthRecord(QualysModule):
     def _get_parsing_module(self):
-        return qualysapi.gen.webappauthrecordsubs
+        return webappauthrecordsubs
 
     def _make_auth_record_data(self, id=None, name=None):
         out = StringIO()

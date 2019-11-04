@@ -3,6 +3,7 @@ import sys
 import logging
 
 import qualysapi
+import pprint
 
 if __name__ == '__main__':
 
@@ -14,7 +15,7 @@ if __name__ == '__main__':
 
     # Logging must be set after instanciation of connector class.
     logger = logging.getLogger('qualysapi.connector')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     # Log to sys.out.
     logger_console = logging.StreamHandler()
@@ -30,12 +31,14 @@ if __name__ == '__main__':
     # get your portal version
     # https://qualysapi.qualys.com/qps/rest/portal/version
     # ret = api.request('/qps/rest/portal/version')
-    # for modulename, version in api.get_portal_version():
-    #     print("%s: %s" %(modulename, version))
 
-    # print(api.was.get_webapp_count())
+    #pprint.pprint(api.get_portal_version())
+    #for modulename, version in api.get_portal_version():
+    #   print("%s: %s" %(modulename, version))
 
+    # test WAS module
     if False:
+        print(api.was.webapp.get_webapp_count())
         webapp_list = api.was.webapp.search_webapp()
         for webapp in webapp_list:
             print(webapp)
@@ -58,8 +61,8 @@ if __name__ == '__main__':
         # response = api.was.webapp.delete_webapp(id=result.id)
         # print(response)
 
-        response = api.was.webapp.get_selenium_script(24348536, 5200)
-        print(response)
+        #response = api.was.webapp.get_selenium_script(24348536, 5200)
+        #print(response)
 
         # # should fail
         # response = api.was.webapp.delete_webapp(id='12098s')
@@ -79,6 +82,8 @@ if __name__ == '__main__':
         for record in auth_records:
             print(record)
             print(record.id)
+            r2 = api.was.authrecord.get_auth_record_details(record.id)
+            pprint.pprint(r2)
 
         # record = api.was.authrecord.get_auth_record_details(auth_records[-1].id)
         # print(record)

@@ -291,6 +291,7 @@ class QGConnector(api_actions.QGActions):
         # Set up http request method, if not specified.
         if not http_method:
             http_method = self.format_http_method(api_version, api_call, data)
+        http_method = http_method.lower()
         logger.debug('http_method = %s' % http_method)
         #
         # Format API call.
@@ -307,12 +308,12 @@ class QGConnector(api_actions.QGActions):
         logger.debug('data =\n%s' % (str(data)))
         logger.debug('headers =\n%s' % (str(headers)))
 
-        return url, data, headers
+        return url, data, headers, http_method
 
     def request_streaming(self, api_call, data=None, api_version=None, http_method=None):
         """ Return QualysGuard streaming response """
 
-        url, data, headers = self.build_request(api_call, data, api_version, http_method)
+        url, data, headers, http_method = self.build_request(api_call, data, api_version, http_method)
         # Make request.
         if http_method == 'get':
             # GET
@@ -355,7 +356,7 @@ class QGConnector(api_actions.QGActions):
         concurrent_scans_retries = int(concurrent_scans_retries)
         concurrent_scans_retry_delay = int(concurrent_scans_retry_delay)
 
-        url, data, headers = self.build_request(api_call, data, api_version, http_method)
+        url, data, headers, http_method = self.build_request(api_call, data, api_version, http_method)
 
         # Make request at least once (more if concurrent_retry is enabled).
         retries = 0
@@ -367,7 +368,7 @@ class QGConnector(api_actions.QGActions):
             logger.debug('url = %s' % (str(url)))
             logger.debug('data = %s' % (str(data)))
             logger.debug('headers = %s' % (str(headers)))
-            if http_method.lower() == 'get':
+            if http_method == 'get':
                 # GET
                 logger.debug('GET request.')
                 request = self.session.get(url, params=data, auth=self.auth, headers=headers, proxies=self.proxies)
@@ -448,3 +449,10 @@ class QGConnector(api_actions.QGActions):
             logger.error('Headers = %s' % str(request.headers))
             return False
         return response
+
+    def get_portal_version(self, *args, **kwargs):
+        call = '/qps/rest/portal/version'
+        results = self.request(call)
+        #return results.data
+        results = objectify.fromstring(results.encode('utf-8'))
+        return dict([(i.tag, dict([(_.tag, str(_)) for _ in i.getchildren()])) for i in results.data.getchildren()])
