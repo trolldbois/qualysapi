@@ -180,7 +180,7 @@ class QGConnector(api_actions.QGActions):
             if api_call_endpoint in self.api_methods['was get']:
                 return 'get'
             # Post calls with no payload will result in HTTPError: 415 Client Error: Unsupported Media Type.
-            if not data:
+            if data is None:
                 # No post data. Some calls change to GET with no post data.
                 if api_call_endpoint in self.api_methods['was no data get']:
                     return 'get'
@@ -252,7 +252,7 @@ class QGConnector(api_actions.QGActions):
                 logger.debug('Converted: %s' % data)
         return data
 
-    def request(self, api_call, data=None, api_version=None, http_method=None, concurrent_scans_retries=0,
+    def build_request(self, api_call, data=None, api_version=None, http_method=None, concurrent_scans_retries=0,
                 concurrent_scans_retry_delay=0):
         """ Return QualysGuard API response.
 
@@ -302,6 +302,61 @@ class QGConnector(api_actions.QGActions):
         # Format data, if applicable.
         if data is not None:
             data = self.format_payload(api_version, data)
+
+        logger.debug('url =\n%s' % (str(url)))
+        logger.debug('data =\n%s' % (str(data)))
+        logger.debug('headers =\n%s' % (str(headers)))
+
+        return url, data, headers
+
+    def request_streaming(self, api_call, data=None, api_version=None, http_method=None):
+        """ Return QualysGuard streaming response """
+
+        url, data, headers = self.build_request(api_call, data, api_version, http_method)
+        # Make request.
+        if http_method == 'get':
+            # GET
+            logger.debug('GET request.')
+            request = self.session.get(url, params=data, auth=self.auth, headers=headers, proxies=self.proxies, stream=True)
+        else:
+            # POST
+            logger.debug('POST request.')
+            # Make POST request.
+            request = self.session.post(url, data=data, auth=self.auth, headers=headers, proxies=self.proxies, stream=True)
+        logger.debug('response headers =\n%s' % (str(request.headers)))
+        #
+        # Remember how many times left user can make against api_call.
+        try:
+            self.rate_limit_remaining[api_call] = int(request.headers['x-ratelimit-remaining'])
+            logger.debug('rate limit for api_call, %s = %s' % (api_call, self.rate_limit_remaining[api_call]))
+            if self.rate_limit_remaining[api_call] <= 0:
+                logger.critical('ATTENTION! RATE LIMIT HAS BEEN REACHED (remaining api calls = %s)!' %
+                                self.rate_limit_remaining[api_call])
+        except KeyError as e:
+            # Likely a bad api_call.
+            logger.debug(e)
+            pass
+        except TypeError as e:
+            # Likely an asset search api_call.
+            logger.debug(e)
+            pass
+        # Response received.
+
+        return request
+
+    def request(self, api_call, data=None, api_version=None, http_method=None, concurrent_scans_retries=0,
+                concurrent_scans_retry_delay=0):
+        """ Return QualysGuard API response.
+
+        """
+
+        logger.debug('concurrent_scans_retries =\n%s' % str(concurrent_scans_retries))
+        logger.debug('concurrent_scans_retry_delay =\n%s' % str(concurrent_scans_retry_delay))
+        concurrent_scans_retries = int(concurrent_scans_retries)
+        concurrent_scans_retry_delay = int(concurrent_scans_retry_delay)
+
+        url, data, headers = self.build_request(api_call, data, api_version, http_method)
+
         # Make request at least once (more if concurrent_retry is enabled).
         retries = 0
         #
@@ -322,6 +377,10 @@ class QGConnector(api_actions.QGActions):
                 # Make POST request.
                 request = self.session.post(url, data=data, auth=self.auth, headers=headers, proxies=self.proxies)
             logger.debug('response headers = %s' % (str(request.headers)))
+            # Force request encoding value, the automatic detection is very long for large files (report for example)
+            # And sometimes with MemoryError
+            if request.encoding is None:
+                request.encoding = 'utf-8'
             #
             # Remember how many times left user can make against api_call.
             try:
@@ -346,15 +405,14 @@ class QGConnector(api_actions.QGActions):
                 logger.debug(e)
                 pass
             # Response received.
-            # response = request.text
-            response = request.content
+            response = request.text
             logger.debug('response text = %s' % (response))
             # Keep track of how many retries.
             retries += 1
             # Check for concurrent scans limit.
-            if not (b'<responseCode>INVALID_REQUEST</responseCode>' in response and
-                    b'<errorMessage>You have reached the maximum number of concurrent running scans' in response and
-                    b'<errorResolution>Please wait until your previous scans have completed</errorResolution>' in response):
+            if not ('<responseCode>INVALID_REQUEST</responseCode>' in response and
+                    '<errorMessage>You have reached the maximum number of concurrent running scans' in response and
+                    '<errorResolution>Please wait until your previous scans have completed</errorResolution>' in response):
                 # Did not hit concurrent scan limit.
                 break
             else:
@@ -382,7 +440,7 @@ class QGConnector(api_actions.QGActions):
             print('Headers = ', request.headers)
             logger.error('Headers = %s' % str(request.headers))
             request.raise_for_status()
-        if b'<RETURN status="FAILED" number="2007">' in response:
+        if '<RETURN status="FAILED" number="2007">' in response:
             print('Error! Your IP address is not in the list of secure IPs. Manager must include this IP (QualysGuard VM > Users > Security).')
             print('Content = ', response)
             logger.error('Content = %s' % response)
@@ -390,10 +448,3 @@ class QGConnector(api_actions.QGActions):
             logger.error('Headers = %s' % str(request.headers))
             return False
         return response
-
-
-    def get_portal_version(self, *args, **kwargs):
-        call = '/qps/rest/portal/version'
-        results = self.request(call)
-        results.data['Portal-Version']
-        return results

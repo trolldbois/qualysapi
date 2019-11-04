@@ -96,7 +96,7 @@ class QualysModule(object):
         full_endpoint = endpoint.format(**kwargs)
         response = self.connector.request(full_endpoint, http_method=http_method, data=data)
         # response = self._parsing_module.parseString(response, silence=True)
-        response = objectify.fromstring(response, self.__parser)
+        response = objectify.fromstring(response.encode('utf-8'), self.__parser)
         response = self._handle_response_code(response)
         response = self._handle_pagination(response, full_endpoint, http_method)
         return response
