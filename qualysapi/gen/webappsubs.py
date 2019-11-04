@@ -12,7 +12,7 @@
 #   webapp.xsd
 #
 # Command line:
-#   C:\Users\ljaqueme\DOCUME~1\02-THR~1\05-INT~1\10-IR-~1\V_IR-T~2\Scripts\generateDS -o "webapp.py" -s "webappsubs.py" webapp.xsd
+#   generateDS -o "webapp.py" -s "webappsubs.py" webapp.xsd
 #
 # Current working directory (os.getcwd()):
 #   gen
